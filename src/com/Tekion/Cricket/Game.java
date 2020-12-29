@@ -2,6 +2,13 @@ package com.Tekion.Cricket;
 import java.util.Iterator;
 import java.util.Random;
 import java.lang.Math;
+
+/**
+ * Game Class:
+ * allows for two teams to participate in a cricket game
+ * and prints the results of each game
+ * games can be played forever, scores get reset after print
+ */
 public class Game {
     Team one;
     Team two;
@@ -83,7 +90,7 @@ public class Game {
         space.append(" ".repeat(Math.max(0,seperator-two.getName().length()-3)));
         System.out.println(dash);
 
-        //uses iterators to iterat through list of scores and add to string
+        //uses iterators to iterate through list of scores and add to string
         Iterator<Integer> o = one.scores.iterator();
         Iterator<Integer> t = two.scores.iterator();
         while( o.hasNext() && t.hasNext()){
@@ -110,7 +117,6 @@ public class Game {
         System.out.println(one.total +
                 space.delete(0, ((int)Math.floor(Math.log(one.total) - 2 ) )).toString()+
                             two.total);
-
 
     }
 }

@@ -12,11 +12,9 @@ public class playMatch {
         Game g = Game.createGame(one, two, 50);
 
         //plays multiple matches until user termination
-
         while(true) {
             g.playGame();
             Thread.sleep(100);
         }
-
     }
 }
