@@ -1,7 +1,4 @@
 package com.Tekion.Cricket;
-import java.util.Iterator;
-import java.util.Random;
-import java.lang.Math;
 
 /**
  * Game Class:
@@ -10,9 +7,11 @@ import java.lang.Math;
  * games can be played forever, scores get reset after print
  */
 public class Game {
-    Team one;
-    Team two;
-    int balls;
+    private Team one;
+    private Team two;
+    private int balls;
+    private int matches;
+    private int overs;
     final int upperBound = 8;
 
     /**
@@ -21,10 +20,12 @@ public class Game {
      * @param two the second team in the match
      * @param overs the number of overs in the match
      */
-    private Game(Team one, Team two, int overs){
+    private Game(Team one, Team two, int overs, int matches){
         this.one = one;
         this.two = two;
+        this.overs = overs;
         this.balls = 6* overs;
+        this.matches = matches;
     }
 
     /**
@@ -34,20 +35,35 @@ public class Game {
      * @param overs the number of overs in the match
      * @return returns a game object after calling constructor
      */
-    public static Game createGame(Team one, Team two, int overs){
-        return new Game(one,two, overs);
+    public static Game createGame(Team one, Team two, int matches, int overs){
+        return new Game(one,two,matches,overs);
+    }
+
+    /**
+     * plays the game match number of times
+     * prints out the winner of the game and by how many games
+     */
+    public void play(){
+        System.out.println("SCORE ----- BOARD\n");
+        for( int i = 0; i < matches; i++){
+            playMatch(i);
+        }
+
     }
 
     /**
      * Plays the game between the two teams calls the bat method
      * on both teams, then prints result. resets scores to zero for a new game
      */
-    public void playGame(){
-        bat(one,6*balls);
-        bat(two, one.total);
-        printResults();
-        one.resetScores();
-        two.resetScores();
+    private void playMatch(int idx){
+        if( idx %2 == 0){
+            bat(two);
+            two.resetScores();
+        }
+        else{
+            bat(one);
+            one.resetScores();
+        }
     }
 
     /**
@@ -55,68 +71,53 @@ public class Game {
      * if a 7 is chosen then considered a W or a wicket, ten wickets and youre out
      * if the second team is batting then they need to beat the first team by one ball
      * @param team the current team up for batting
-     * @param max the score needed for team 2 to beat team one
-     *            deafult max is the number of balls multipleid by 6 for team 1
      */
-    private void bat(Team team, int max){
+    private void bat(Team team){
         int wickets = 0;
-        Random rand = new Random();
+        int playerIdx=0;
+        Bowler[] bowlers = team.getBowlers();
+        Batsman[] batters = team.getBatters();
 
-        for( int i =0; i < this.balls; i++) {
-            if (wickets == 10 || team.total > max ) { break; }
-            int hit = rand.nextInt(upperBound);
-            if (hit == 7) { wickets++; }
-            else{ team.total += hit; }
-            team.scores.add(hit);
+        for( int i =1; i <= this.balls; i++) {
+            if (wickets == 10 ) { break; }
+
+            int bowlerIdx = (i/6)%overs%bowlers.length;
+            int hit = Utils.random();
+
+            if (hit == 7) {
+                wickets++;
+                playerIdx++;
+                bowlers[bowlerIdx].addWicket();
+                matchStats(team,i,"W", batters[playerIdx-1]);
+            }
+            else{
+                team.addTotal(hit);
+                batters[playerIdx].addRun(hit);
+                matchStats(team,i, Integer.toString(hit), batters[playerIdx]);
+            }
+            team.addScores(hit);
         }
     }
 
     /**
-     * prints the results with a specific format
-     * team one vs team two
-     * --------------------
-     * scores      scores
-     * --------------------
-     * total        total
+     * Prints of the results after every hit
+     * @param team the team that was up for bat
+     * @param balls the current ball that was thrown
+     * @param run the runs made from hitting the ball
+     * @param batter the current batter
      */
-    private void printResults(){
-
-        //generates headers and footers, also creates proper spacing
-        System.out.println(one.getName() + " VS " + two.getName());
-        int seperator = one.getName().length() + + two.getName().length() + 4;
-        StringBuilder space = new StringBuilder();
-        StringBuilder dash = new StringBuilder();
-        dash.append("-".repeat(Math.max(0, seperator)));
-        space.append(" ".repeat(Math.max(0,seperator-two.getName().length()-3)));
-        System.out.println(dash);
-
-        //uses iterators to iterate through list of scores and add to string
-        Iterator<Integer> o = one.scores.iterator();
-        Iterator<Integer> t = two.scores.iterator();
-        while( o.hasNext() && t.hasNext()){
-            int hitOne = o.next();
-            int hitTwo = t.next();
-            String resOne;
-            if (hitOne != 7) { resOne = Integer.toString(hitOne); } else { resOne = "W"; }
-            String resTwo;
-            if( hitTwo == 7){ resTwo = "W"; }
-            else{ resTwo = Integer.toString(hitTwo); }
-
-            System.out.println(resOne + space + resTwo);
-        }
-
-        //adds left over balls from team 1 if any
-        while(o.hasNext()) {
-            int hit = o.next();
-            if(hit == 7){ System.out.println("W");}
-            else { System.out.println(hit); }
-        }
-
-        //prints out footer and total score
-        System.out.println(dash);
-        System.out.println(one.total +
-                space.delete(0, ((int)Math.floor(Math.log(one.total) - 2 ) )).toString()+
-                            two.total);
-
+    private void matchStats(Team team, int balls, String run, Batsman batter){
+        System.out.printf("Over Completed %d.%d by %s from %s with %s run hit and %d total team runs\n",
+                balls/6,
+                balls%6,
+                batter.getName(),
+                team.getName(),
+                run,
+                team.getTotal()
+        );
+//        for (Batsman bat: team.getBatters()) {
+//            System.out.print(bat.getName() + " : " + bat.getRuns() + ", ");
+//        }
     }
+
 }
